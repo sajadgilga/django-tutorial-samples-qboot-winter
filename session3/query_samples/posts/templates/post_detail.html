@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+    <title>{{ post.title }}</title>
+{% endblock %}
+
+{% block body %}
+    {% include 'post_card.html' with post=post %}
+    <form method="post">
+        {% csrf_token %}
+        {{ form.management_form }}
+        {% for field in form %}
+            <div style="margin-bottom: 10px">
+                {{ field.label }}:
+                <div style="margin-top: 5px">
+                    {{ field }}
+                </div>
+                {{ field.errors }}
+            </div>
+        {% endfor %}
+        <button type="submit">submit</button>
+    </form>
+{% endblock %}
+

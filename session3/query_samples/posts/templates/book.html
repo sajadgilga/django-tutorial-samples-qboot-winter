@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block body %}
+    <form method="post">
+        {% csrf_token %}
+        {{ formset.management_form }}
+        {% for form in formset %}
+            <div style="margin: 8px">
+                {{ form }}
+            </div>
+        {% endfor %}
+        <button type="submit">submit</button>
+    </form>
+{% endblock %}

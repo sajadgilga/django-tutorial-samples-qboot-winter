@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+    <title>Post List</title>
+{% endblock %}
+
+{% block body %}
+    <img src="{% static "sample1.png" %}" style="max-width: 200px"/>
+    {% for post in posts %}
+        {% include 'post_card.html' with post=post last=forloop.last only %}
+    {% endfor %}
+{% endblock %}

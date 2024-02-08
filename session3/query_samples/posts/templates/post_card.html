@@ -1,0 +1,7 @@
+<div style="background-color: aqua">
+    <p style="font-weight: bold">{{ post.title }}</p>
+    <div>{{ post.content }}</div>
+</div>
+{% if not last %}
+    <hr>
+{% endif %}

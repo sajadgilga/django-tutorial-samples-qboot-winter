@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    {% block title %}
+        <title>Post</title>
+    {% endblock %}
+</head>
+<body>
+<div>
+    {{ title|upper }}
+</div>
+<div>
+    {% block body %}
+        Hello world!
+    {% endblock %}
+</div>
+</body>
+</html>
