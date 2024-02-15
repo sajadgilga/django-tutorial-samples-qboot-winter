@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block body %}
+    Teams are:
+    <br/>
+    {% for team in team_list %}
+        {{ team.name }}
+        <hr/>
+    {% endfor %}
+{% endblock %}

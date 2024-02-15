@@ -19,6 +19,7 @@ class Post(models.Model):
     created_date = models.DateTimeField(auto_now_add=True)
     view_count = models.PositiveIntegerField(default=0)
     like_count = models.PositiveIntegerField(default=0)
+    engagement_count = models.PositiveIntegerField()
     templates = models.ManyToManyField(to='PostTemplate', related_name='posts')
     archived = models.BooleanField(default=False)
 
@@ -28,6 +29,7 @@ class Post(models.Model):
 class Comment(models.Model):
     text = models.TextField()
     created_date = models.DateTimeField(auto_now_add=True)
+    modified_date = models.DateTimeField(auto_now=True)
     post = models.ForeignKey(to=Post, on_delete=models.CASCADE, related_name='my_comments')
 
 
@@ -41,6 +43,7 @@ class PostTemplate(models.Model):
 
 class Library(models.Model):
     name = models.CharField(max_length=32)
+    created_date = models.DateTimeField(auto_now_add=True, null=True)
 
 
 def default_library():
@@ -57,3 +60,4 @@ class Book(models.Model):
     published_date = models.DateTimeField(null=True)
     archived = models.BooleanField(default=False)
     library = models.ForeignKey(to=Library, on_delete=models.CASCADE, default=default_library)
+    tags = models.TextField(null=True)

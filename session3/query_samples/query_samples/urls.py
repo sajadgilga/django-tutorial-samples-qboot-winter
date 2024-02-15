@@ -17,7 +17,7 @@ Including another URLconf
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 
 from posts.views import retrieve_posts, retrieve_posts_exclude_sample, retrieve_posts_with_equal_content_title, \
     add_templates, view_template, library_view
@@ -30,5 +30,6 @@ urlpatterns = [
                   path('posts/add-template/', add_templates),
                   path('posts/template/', view_template),
                   path('books/', library_view),
+                  path('football/', include('football.urls'))
               ] + \
               static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
