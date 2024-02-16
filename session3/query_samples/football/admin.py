@@ -1,7 +1,9 @@
 from django.contrib import admin
 
-# Register your models here.
 from football.models import Fixture, Team
+
+
+# Register your models here.
 
 
 @admin.register(Fixture)
