@@ -28,7 +28,7 @@ class ProductDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # context['properties'] = self.object.properties.all()
+        context['properties'] = self.object.properties.all()
         return context
 
     def get_queryset(self):

@@ -11,7 +11,7 @@
         <h4>Price: {{ product.price }}</h4>
         <hr/>
         <h3>Properties:</h3>
-        {% for property in product.properties %}
+        {% for property in properties %}
             <div style="display: flex; flex-direction: row; justify-content: space-around">
                 <p style="font-weight: bold">{{ property.name }}:</p>
                 <p>{{ property.value }}</p>
