@@ -1,6 +1,6 @@
 import json
 
-from django.contrib.auth import authenticate, login, get_user_model
+from django.contrib.auth import authenticate, get_user_model
 # Create your views here.
 from django.contrib.auth.views import LoginView as DjangoLoginView
 from django.http import JsonResponse
@@ -8,7 +8,14 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 
+from authentication.models import user_creation_signal, Token
+from posts.models import MySender
+
 User = get_user_model()
+
+
+def create_token(user):
+    return Token.objects.generate_token(user)
 
 
 class CustomLoginView(DjangoLoginView):
@@ -20,12 +27,12 @@ class CustomLoginView(DjangoLoginView):
 class LoginView(View):
     def post(self, request, *args, **kwargs):
         data = json.loads(request.body)
-        username, password = data['username'], data['password']
-        user = authenticate(request, username=username, password=password)
+        email, password = data['email'], data['password']
+        user = authenticate(request, email=email, password=password)
         if not user:
             return JsonResponse({'message': 'Wrong credentials, user was not logged in'}, status=401)
-        login(request, user)
-        return JsonResponse({'message': 'User was logged in successfully'})
+        token = create_token(user)
+        return JsonResponse({'message': 'User was logged in successfully', 'token': token})
 
 
 @method_decorator(csrf_exempt, name="dispatch")
@@ -49,6 +56,7 @@ class SignupView(View):
             return JsonResponse({'message': 'There is already an existing user with this username'}, status=400)
 
         user = User.objects.create_user(username, email=email, password=password, phone=phone)
+        user_creation_signal.send(MySender, user=user)
 
         # Optional: based on whether we want to login user in signup api
         # login(request, user)

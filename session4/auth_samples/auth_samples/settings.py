@@ -46,6 +46,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'auth_samples.middlewares.CustomAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -120,3 +121,11 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'authentication.CustomUser'
+
+TOKEN_EXPIRE_TIME = 60
+TOKEN_DATE_FORMAT = '%Y-%m-%d:%H:%M'
+
+AUTHENTICATION_BACKENDS = [
+    'authentication.backends.CustomAuthenticationBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
