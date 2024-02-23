@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    <title>My Cart</title>
+{% endblock %}
+
+{% block body %}
+    {% if cart %}
+        {% for item in cart.items.all %}
+            <div>
+                <h3>{{ item.product.name }}</h3>
+                <p>{{ item.count }}</p>
+            </div>
+        {% endfor %}
+        <button id="create-order">submit cart</button>
+
+        <script>
+            document.getElementById('create-order').addEventListener('click', () => {
+                fetch('/order/cart/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'same-origin'
+                }).then(response => response.json())
+                    .then(data => alert(data.message))
+            })
+        </script>
+    {% else %}
+        <div style="display: flex; flex-direction: row; justify-content: center; align-items: center"><h3>Empty
+            cart</h3></div>
+
+    {% endif %}
+
+{% endblock %}

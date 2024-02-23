@@ -1,7 +1,7 @@
-{% extends 'base.html' %}
+{% extends 'base_product.html' %}
 {% load static %}
 
-{% block body %}
+{% block content %}
     <div style="display: flex; flex-direction: column; width: 700px; min-width: 700px">
         <h2>{{ product.name }}</h2>
         <img src="{{ product.image.url }}" style="max-width: 700px"/>
@@ -9,7 +9,8 @@
         <p>{{ product.description }}</p>
         <br/>
         <h4>Price: {{ product.price }}</h4>
-        <hr/>
+        <hr style="min-width: 700px"/>
+        <button id="add-to-cart">add product to cart</button>
         <h3>Properties:</h3>
         {% for property in properties %}
             <div style="display: flex; flex-direction: row; justify-content: space-around">
@@ -18,4 +19,17 @@
             </div>
         {% endfor %}
     </div>
+    <script>
+        document.getElementById('add-to-cart').addEventListener('click', () => {
+            fetch('/order/cart/add/{{ product.pk }}/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'same-origin'
+            }).then(response => response.json())
+                .then(data => alert(data.message))
+        })
+    </script>
 {% endblock %}

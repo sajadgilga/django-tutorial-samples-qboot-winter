@@ -1,4 +1,5 @@
 from django.db.models import F
+from django.views import View
 from django.views.generic import ListView, DetailView
 
 from authentication.models import UserType
@@ -40,3 +41,4 @@ class ProductDetailView(DetailView):
         else:
             queryset = queryset.annotate(price=F('default_price'))
         return queryset
+

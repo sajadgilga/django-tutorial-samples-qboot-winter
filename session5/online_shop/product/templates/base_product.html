@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block body %}
+    <div style="display: flex; flex-direction: row">
+        <div style="max-width: 100px">
+            <a href="{% url 'cart_view' %}">
+                display cart
+            </a>
+        </div>
+    </div>
+    <div style="justify-content: center; align-items: center; display: flex; flex-direction: column">
+        {% block content %}
+        {% endblock %}
+    </div>
+{% endblock %}
