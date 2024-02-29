@@ -3,6 +3,7 @@ from datetime import datetime
 from django.contrib.auth.models import User
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
+from rest_framework.relations import HyperlinkedRelatedField
 from rest_framework.validators import UniqueTogetherValidator
 
 from books.models import Book, Comment
@@ -28,15 +29,16 @@ def validate_book():
 
 
 class CommentLeanSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
     text = serializers.CharField()
     user_id = serializers.IntegerField(write_only=True)
 
 
 class BookSerializer(serializers.Serializer):
-    title = serializers.CharField(allow_null=False, allow_blank=True, validators=[check_unique_title, check_min_length])
+    title = serializers.CharField(allow_null=False, allow_blank=True, validators=[check_min_length])
     description = serializers.CharField()
     author_name = serializers.CharField(source='author.username', read_only=True)
-    author_id = serializers.IntegerField(write_only=True)
+    author_id = serializers.IntegerField(write_only=True, required=False)
     id = serializers.IntegerField(read_only=True)
     info = serializers.CharField(read_only=True)
     published_date = serializers.DateField(allow_null=True, required=False, initial='2022-10-10')
@@ -47,7 +49,7 @@ class BookSerializer(serializers.Serializer):
     #     return CommentLeanSerializer(obj.comments, many=True).data
 
     def validate_title(self, value):
-        check_unique_title(value)
+        # check_unique_title(value)
         if len(value) > 10:
             raise ValidationError("title must be less than 10 chars")
         # value = value.lower()
@@ -68,11 +70,15 @@ class BookSerializer(serializers.Serializer):
                       validate_book()]
 
     def update(self, instance, validated_data):
+        comments = validated_data['comments']
         instance.title = validated_data['title']
-        instance.author_id = validated_data['author_id']
+        if 'author_id' in validated_data:
+            instance.author_id = validated_data['author_id']
         instance.published_date = validated_data['published_date']
         instance.description = validated_data['description']
         instance.save()
+        for comment in comments:
+            Comment.objects.filter(id=comment['id']).update(**comment)
         return instance
 
     def create(self, validated_data):
@@ -95,13 +101,14 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    book = BookSerializer()
+    book = HyperlinkedRelatedField(view_name="book-detail", read_only=True)
     user_name = serializers.SerializerMethodField()
     user = UserSerializer()
 
     class Meta:
         model = Comment
-        fields = ['book', 'text', 'id', 'user', 'user_name']
+        fields = ['book', 'text', 'id', 'user', 'user_name', 'tag']
+        extra_kwargs = {'text': {'required': False}}
         depth = 1
 
     def get_user_name(self, obj: Comment):
