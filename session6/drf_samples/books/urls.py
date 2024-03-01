@@ -5,8 +5,8 @@ from books.views import BookView, BookApiView, CommentListView, BookViewset, Com
 
 router = SimpleRouter()
 
-router.register('', BookViewset)
-router.register('company/', CompanyViewSet)
+router.register('books', BookViewset)
+router.register('company', CompanyViewSet)
 
 urlpatterns = [
                   path('django-book-view', BookView.as_view()),

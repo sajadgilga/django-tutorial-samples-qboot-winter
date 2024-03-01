@@ -6,7 +6,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.relations import HyperlinkedRelatedField
 from rest_framework.validators import UniqueTogetherValidator
 
-from books.models import Book, Comment, Company
+from books.models import Book, Comment, Company, Department
 
 
 def check_unique_title(value):
@@ -115,15 +115,46 @@ class CommentSerializer(serializers.ModelSerializer):
         return obj.user.first_name + ' ' + obj.user.last_name
 
 
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'first_name', 'last_name']
+
+
+class DepartmentSerializer(serializers.ModelSerializer):
+    director = UserSerializer()
+    members = UserSerializer(many=True)
+
+    class Meta:
+        model = Department
+        fields = ['id', 'name', 'director', 'members']
+
+    def update(self, instance, validated_data):
+        members = validated_data.pop('members')
+        director = validated_data.pop('director')
+        department = super().update(instance, validated_data)
+        for member_data in members:
+            try:
+                member = department.members.get(id=member_data.pop('id'))
+            except User.DoesNotExist:
+                raise ValidationError('user with this id not found')
+            user_serializer = UserSerializer(member, member_data)
+            user_serializer.is_valid(raise_exception=True)
+            user_serializer.save()
+
+
 class CompanySerializer(serializers.ModelSerializer):
     date_type1 = serializers.SerializerMethodField(read_only=True)
     date_type2 = serializers.DateField(source='date', read_only=True)
+    departments = DepartmentSerializer(many=True)
+    owner = UserSerializer()
 
     class Meta:
         model = Company
         fields = [
             'id', 'name', 'owner',
             'size', 'field',
+            'departments',
             'date_type1',  # first way to use different dates
             'date_type2',  # second way to use different dates
             'created_date', 'end_date'  # third way to use different dates
@@ -141,3 +172,36 @@ class CompanySerializer(serializers.ModelSerializer):
         else:
             result.pop('created_date')
         return result
+
+    def update(self, instance, validated_data):
+        owner = validated_data.pop('owner')
+        departments = validated_data.pop('departments')
+        company = super().update(instance, validated_data)
+        if 'id' not in owner:
+            user = User.objects.create(**owner)
+        else:
+            try:
+                user = User.objects.get(id=owner['id'])
+            except User.DoesNotExist:
+                raise ValidationError('no user with this id found')
+            for key, value in owner.items():
+                if key != 'id':
+                    user.__setattr__(key, value)
+            user.save()
+        company.owner = user
+
+        for department_data in departments:
+            department = company.departments.filter(id=department_data.pop('id')).first()
+            if not department:
+                raise ValidationError('no department with this id found')
+
+            # first way to update
+            for key, value in department_data.items():
+                if key != 'id':
+                    setattr(department, key, value)
+            department.save()
+
+            # second way to update
+            department_serializer = DepartmentSerializer(data=department_data, instance=department)
+            department_serializer.is_valid(raise_exception=True)
+            department_serializer.save()

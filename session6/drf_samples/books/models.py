@@ -35,3 +35,10 @@ class Company(models.Model):
     @property
     def date(self):
         return self.created_date if self.is_active else self.end_date
+
+
+class Department(models.Model):
+    director = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    name = models.CharField(max_length=64)
+    company = models.ForeignKey('Company', on_delete=models.CASCADE, related_name='departments')
+    members = models.ManyToManyField(get_user_model(), related_name='departments')
