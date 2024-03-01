@@ -21,3 +21,17 @@ class Comment(models.Model):
     book = models.ForeignKey(to='Book', on_delete=models.CASCADE, related_name='comments')
     text = models.TextField()
     tag = models.CharField(max_length=16)
+
+
+class Company(models.Model):
+    owner = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    name = models.CharField(max_length=64)
+    created_date = models.DateField()
+    end_date = models.DateField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    size = models.PositiveSmallIntegerField()
+    field = models.CharField(max_length=64)
+
+    @property
+    def date(self):
+        return self.created_date if self.is_active else self.end_date

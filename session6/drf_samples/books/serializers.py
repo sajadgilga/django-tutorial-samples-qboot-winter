@@ -6,7 +6,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.relations import HyperlinkedRelatedField
 from rest_framework.validators import UniqueTogetherValidator
 
-from books.models import Book, Comment
+from books.models import Book, Comment, Company
 
 
 def check_unique_title(value):
@@ -113,3 +113,31 @@ class CommentSerializer(serializers.ModelSerializer):
 
     def get_user_name(self, obj: Comment):
         return obj.user.first_name + ' ' + obj.user.last_name
+
+
+class CompanySerializer(serializers.ModelSerializer):
+    date_type1 = serializers.SerializerMethodField(read_only=True)
+    date_type2 = serializers.DateField(source='date', read_only=True)
+
+    class Meta:
+        model = Company
+        fields = [
+            'id', 'name', 'owner',
+            'size', 'field',
+            'date_type1',  # first way to use different dates
+            'date_type2',  # second way to use different dates
+            'created_date', 'end_date'  # third way to use different dates
+        ]
+
+    def get_date_type1(self, obj):
+        if obj.is_active:
+            return obj.created_date
+        return obj.end_date
+
+    def to_representation(self, instance):
+        result = super().to_representation(instance)
+        if instance.is_active:
+            result.pop('end_date')
+        else:
+            result.pop('created_date')
+        return result

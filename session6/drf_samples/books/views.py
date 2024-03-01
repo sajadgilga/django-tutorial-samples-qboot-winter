@@ -10,8 +10,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from books.models import Book, Comment
-from books.serializers import BookSerializer, CommentSerializer
+from books.models import Book, Comment, Company
+from books.serializers import BookSerializer, CommentSerializer, CompanySerializer
 
 
 class BookView(View):
@@ -83,3 +83,8 @@ class BookViewset(ModelViewSet):
     def delete_comment(self, request, pk):
         Comment.objects.get(pk=self.kwargs.get('pk')).delete()
         return Response({"message": "deleted"})
+
+
+class CompanyViewSet(ModelViewSet):
+    queryset = Company.objects.all()
+    serializer_class = CompanySerializer

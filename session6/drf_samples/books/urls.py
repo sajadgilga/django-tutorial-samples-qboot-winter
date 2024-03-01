@@ -1,11 +1,12 @@
 from django.urls import path
 from rest_framework.routers import SimpleRouter
 
-from books.views import BookView, BookApiView, CommentListView, BookViewset
+from books.views import BookView, BookApiView, CommentListView, BookViewset, CompanyViewSet
 
 router = SimpleRouter()
 
 router.register('', BookViewset)
+router.register('company/', CompanyViewSet)
 
 urlpatterns = [
                   path('django-book-view', BookView.as_view()),
