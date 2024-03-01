@@ -5,6 +5,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.relations import HyperlinkedRelatedField
 from rest_framework.validators import UniqueTogetherValidator
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from books.models import Book, Comment, Company, Department
 
@@ -32,7 +33,6 @@ class CommentLeanSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     text = serializers.CharField()
     user_id = serializers.IntegerField(write_only=True)
-
 
 class BookSerializer(serializers.Serializer):
     title = serializers.CharField(allow_null=False, allow_blank=True, validators=[check_min_length])
@@ -175,6 +175,7 @@ class CompanySerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         owner = validated_data.pop('owner')
+        owner = self.context.get('request').user
         departments = validated_data.pop('departments')
         company = super().update(instance, validated_data)
         if 'id' not in owner:
@@ -205,3 +206,11 @@ class CompanySerializer(serializers.ModelSerializer):
             department_serializer = DepartmentSerializer(data=department_data, instance=department)
             department_serializer.is_valid(raise_exception=True)
             department_serializer.save()
+
+
+class CustomObtainTokenSerializer(TokenObtainPairSerializer):
+    def get_token(cls, user):
+        payload = super().get_token(user)
+        payload['new_variable'] = 'hello world'
+        payload['username'] = user.username
+        return payload

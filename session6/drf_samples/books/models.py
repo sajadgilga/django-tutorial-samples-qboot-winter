@@ -2,7 +2,62 @@ from django.contrib.auth import get_user_model
 from django.db import models
 
 
-# Create your models here.
+class BookStateLogic:
+    def publish(self, obj):
+        pass
+
+    def reject(self, obj):
+        pass
+
+    def notify_users(self, obj):
+        pass
+
+
+class BookDraft(BookStateLogic):
+    def publish(self, obj):
+        obj.state = BookState.moderation
+        obj.save()
+
+    def reject(self, obj):
+        raise Exception('You cannot reject book in draft state')
+
+    def notify_users(self, obj):
+        pass
+
+
+class BookModeration(BookStateLogic):
+    def publish(self, obj):
+        obj.state = BookState.published
+        obj.save()
+
+    def reject(self, obj):
+        obj.state = BookState.draft
+        obj.save()
+
+    def notify_users(self, obj):
+        pass
+
+
+class BookPublished(BookStateLogic):
+    def publish(self, obj):
+        obj.state = BookState.published
+        obj.save()
+
+    def reject(self, obj):
+        obj.state = BookState.draft
+        obj.save()
+
+    def notify_users(self, obj):
+        pass
+
+
+class BookState(models.TextChoices):
+    draft = 'draft', 'Draft'
+    moderation = 'moderation', 'Moderation'
+    published = 'published', 'Published'
+    editing = 'editing', "Editing"
+
+
 class Book(models.Model):
     title = models.CharField(max_length=32)
     description = models.TextField()
@@ -10,10 +65,30 @@ class Book(models.Model):
     published_date = models.DateField(null=True, blank=True)
     archive = models.BooleanField(default=False)
     publish = models.BooleanField(default=False)
+    state = models.CharField(choices=BookState.choices, max_length=16)
 
     @property
     def info(self):
         return self.title + ': ' + self.description
+
+    @property
+    def state_class(self) -> BookStateLogic:
+        state_mapping = {
+            BookState.draft: BookDraft(),
+            BookState.moderation: BookModeration(),
+            BookState.editing: BookModeration(),
+            BookState.published: BookPublished()
+        }
+        return state_mapping[self.state]
+
+    def publish(self):
+        self.state_class.publish(self)
+
+    def reject(self):
+        self.state_class.reject(self)
+
+    def notify_users(self):
+        self.state_class.notify_users(self)
 
 
 class Comment(models.Model):

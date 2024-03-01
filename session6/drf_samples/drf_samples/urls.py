@@ -16,8 +16,17 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+
+from books.serializers import CustomObtainTokenSerializer
+from books.views import CustomObtainAuthToken
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('books/', include('books.urls')),
+    path('auth/', include('rest_framework.urls'), name='session-auth-apis'),
+    path('auth/token/', CustomObtainAuthToken.as_view(), name='token-login'),
+    path('auth/token/jwt/', TokenObtainPairView.as_view(serializer_class=CustomObtainTokenSerializer),
+         name='jwt-login'),
+    path('auth/token/jwt/refresh/', TokenRefreshView.as_view(), name='jwt-refresh-token'),
 ]

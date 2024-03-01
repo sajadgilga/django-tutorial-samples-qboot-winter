@@ -2,6 +2,9 @@ from django.http import JsonResponse, HttpRequest
 # Create your views here.
 from django.views import View
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.authtoken.models import Token
+from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import ListAPIView, RetrieveUpdateAPIView
@@ -9,6 +12,7 @@ from rest_framework.mixins import CreateModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from books.models import Book, Comment, Company
 from books.serializers import BookSerializer, CommentSerializer, CompanySerializer
@@ -88,3 +92,21 @@ class BookViewset(ModelViewSet):
 class CompanyViewSet(ModelViewSet):
     queryset = Company.objects.all()
     serializer_class = CompanySerializer
+    authentication_classes = [
+        TokenAuthentication, JWTAuthentication
+    ]
+    permission_classes = [IsAuthenticated]
+
+
+class CustomObtainAuthToken(ObtainAuthToken):
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        token, created = Token.objects.get_or_create(user=user)
+        print(f'token was generated: {token}')
+        return Response({'token': token.key})
+
+
+# class CustomObtainPairView(TokenObtainPairView):
+#     serializer_class = CustomObtainTokenSerializer
