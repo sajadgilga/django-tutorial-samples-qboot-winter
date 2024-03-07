@@ -19,10 +19,12 @@ from django.urls import path
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 from authentication.serializers import CustomObtainTokenSerializer
-from authentication.views import RequestOTPView
+from authentication.views import RequestOTPView, sample_view, CreateBookView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('auth/request-otp/', RequestOTPView.as_view()),
     path('auth/login/', TokenObtainPairView.as_view(serializer_class=CustomObtainTokenSerializer)),
+    path('sample-async/', sample_view),
+    path('books/create/', CreateBookView.as_view()),
 ]
