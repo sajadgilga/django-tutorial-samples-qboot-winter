@@ -25,6 +25,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('auth/request-otp/', RequestOTPView.as_view()),
     path('auth/login/', TokenObtainPairView.as_view(serializer_class=CustomObtainTokenSerializer)),
-    path('sample-async/', sample_view),
+    path('sample/', sample_view),
     path('books/create/', CreateBookView.as_view()),
 ]
