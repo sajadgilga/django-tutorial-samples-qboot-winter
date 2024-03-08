@@ -9,7 +9,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.settings import api_settings
 
-from authentication.models import OTPCode
+from authentication.models import OTPCode, ImageUpload
 
 User = get_user_model()
 
@@ -72,3 +72,9 @@ class CustomObtainTokenSerializer(TokenObtainPairSerializer):
             update_last_login(None, self.user)
 
         return data
+
+
+class ImageUploadSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ImageUpload
+        fields = ['id', 'original_image']

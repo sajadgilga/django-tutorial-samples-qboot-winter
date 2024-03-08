@@ -14,17 +14,20 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 from authentication.serializers import CustomObtainTokenSerializer
-from authentication.views import RequestOTPView, sample_view, CreateBookView
+from authentication.views import RequestOTPView, sample_view, CreateBookView, ImageUploadView
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('auth/request-otp/', RequestOTPView.as_view()),
-    path('auth/login/', TokenObtainPairView.as_view(serializer_class=CustomObtainTokenSerializer)),
-    path('sample/', sample_view),
-    path('books/create/', CreateBookView.as_view()),
-]
+                  path('admin/', admin.site.urls),
+                  path('auth/request-otp/', RequestOTPView.as_view()),
+                  path('auth/login/', TokenObtainPairView.as_view(serializer_class=CustomObtainTokenSerializer)),
+                  path('sample/', sample_view),
+                  path('books/create/', CreateBookView.as_view()),
+                  path('upload/', ImageUploadView.as_view())
+              ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1,17 +1,21 @@
 # Create your views here.
 import asyncio
 import json
+import os
 from datetime import datetime, timedelta
+from io import BytesIO
 from time import sleep
 
+from PIL import Image
 from asgiref.sync import sync_to_async
 from celery import shared_task, chain
+from django.core.files.base import ContentFile
 from django.http import HttpResponse, JsonResponse
 from django.views import View
 from rest_framework.generics import CreateAPIView
 
-from authentication.models import OTPCode, Book
-from authentication.serializers import RequestOTPSerializer
+from authentication.models import OTPCode, Book, ImageUpload
+from authentication.serializers import RequestOTPSerializer, ImageUploadSerializer
 
 
 class RequestOTPView(CreateAPIView):
@@ -84,3 +88,31 @@ class CreateBookView(View):
         await asyncio.gather(*books)
 
         return JsonResponse({'message': 'books created'})
+
+
+@shared_task
+def generate_thumbail(img_id):
+    img = ImageUpload.objects.get(id=img_id)
+
+    original = Image.open(img.original_image)
+    original.thumbnail((200, 200))
+    thumb_name, thumb_extension = os.path.splitext(img.original_image.name.split('/')[1])
+    thumb_name += '_thumb' + thumb_extension
+
+    temp_bytes = BytesIO()
+    original.save(temp_bytes, format='JPEG')
+    temp_bytes.seek(0)
+
+    temp_file = ContentFile(temp_bytes.read())
+    temp_bytes.close()
+    img.thumbnail_image.save(thumb_name, temp_file, save=False)
+    img.save()
+
+
+class ImageUploadView(CreateAPIView):
+    serializer_class = ImageUploadSerializer
+    queryset = ImageUpload.objects.all()
+
+    def perform_create(self, serializer):
+        img = serializer.save()
+        generate_thumbail.delay(img.id)

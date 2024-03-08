@@ -10,3 +10,8 @@ class OTPCode(models.Model):
 
 class Book(models.Model):
     name = models.CharField(max_length=64)
+
+
+class ImageUpload(models.Model):
+    original_image = models.ImageField(upload_to='images')
+    thumbnail_image = models.ImageField(upload_to='images/thumbnails', null=True, blank=True)
