@@ -9,6 +9,7 @@ from time import sleep
 from PIL import Image
 from asgiref.sync import sync_to_async
 from celery import shared_task, chain
+from django.core.cache import cache
 from django.core.files.base import ContentFile
 from django.http import HttpResponse, JsonResponse
 from django.views import View
@@ -48,22 +49,38 @@ def sample_task(self, val):
 
 @shared_task
 def heavy_computation(val):
+    cache_key = f'heavy_computation:{len(val)}'
+    cache_result = cache.get(cache_key)
+    if cache_result:
+        print('my heavy task has been read from cache:', cache_result)
+        return cache_result
     c = 0
-    for i in range(100000):
-        for j in range(1000000):
+    for i in range(100):
+        for j in range(100):
             c += i / (j + 1)
-    print('my heavy task has run:', val)
+    print('my heavy task has run:', c)
+    cache.set(cache_key, c)
+    return c
 
 
 def sample_view(request):
+    param = request.GET.get("param", "default")
+    cache_key = f'{request.method}-{request.path}-{param}'
+    cache_result = cache.get(cache_key)
+    if cache_result:
+        return HttpResponse(cache_result)
+    sleep(2)
+    print('sample view run!')
     s1 = compute_power.s(3, 2)
     chain(s1, compute_power.s(2))()
     sample_task.apply_async(("hello",), eta=datetime.now() + timedelta(seconds=2), task_id="my_task_id",
                             queue="important")
 
-    heavy_computation.apply_async(("hello",), eta=datetime.now() + timedelta(seconds=20), task_id="my_task_id",
-                                  queue="computation")
-    return HttpResponse('hello')
+    heavy_computation.apply_async((param,), task_id="my_task_id",
+                                  queue="comp")
+    message = 'hello'
+    cache.set(cache_key, message, 20)
+    return HttpResponse(message)
 
 
 def some_sync_operation(val):
