@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Book List</title>
+</head>
+<body>
+<div>
+    {% for book in books %}
+        <h3>{{ book.title }}</h3>
+        <p>{{ book.description }}</p>
+        <div>{{ book.published_date }}</div>
+        <hr/>
+    {% endfor %}
+</div>
+
+<div>
+    {% if books.has_other_pages %}
+        <div style="display: flex;">
+            {% for page_num in books.paginator.page_range %}
+                <a href="?page={{ page_num }}" style="margin: 8px">{{ page_num }}</a>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+</body>
+</html>
