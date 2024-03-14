@@ -1,14 +1,40 @@
+import json
+
 from django.core.paginator import Paginator
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 # Create your views here.
 from django.views import View
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework.generics import ListAPIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
+from rest_framework.throttling import AnonRateThrottle
 
 from books.models import Book, Comment
 from books.serializers import CommentSerializer
 from pagination_samples.settings import PAGINATION_DEFAULT_SIZE
+
+
+def search_book(request):
+    query = request.GET.get('query', '')
+    result = Book.objects.filter(title__contains=query).first()
+    return HttpResponse(f"result for query {query} is: {result.description if result else 'nothing found'}")
+
+
+class BookXSSView(View):
+    def get(self, request):
+        book = Book.objects.last()
+        return render(request, 'books.html', context={
+            'book': book
+        })
+
+
+@csrf_exempt
+def collect_token(request):
+    data = json.loads(request.body)
+    print('collected data is: ', data)
+    return JsonResponse({})
 
 
 class BookListView(View):
@@ -45,6 +71,7 @@ class BookListApiView(ListAPIView):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     pagination_class = CustomPagination
+    throttle_classes = [AnonRateThrottle]
 
     def get_cache_key(self):
         return 'book-list-view'
