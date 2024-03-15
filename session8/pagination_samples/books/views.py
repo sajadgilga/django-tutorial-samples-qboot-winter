@@ -9,13 +9,15 @@ from django.shortcuts import render
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import CreateView
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, ListCreateAPIView
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from books.models import Book, Comment
-from books.serializers import CommentSerializer
+from books.serializers import BookSerializer, CommentSerializer
 from pagination_samples.settings import PAGINATION_DEFAULT_SIZE
 
 
@@ -71,37 +73,22 @@ class CustomPagination(PageNumberPagination):
 
 
 class BookListApiView(ListAPIView):
-    queryset = Comment.objects.all()
-    serializer_class = CommentSerializer
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer
     pagination_class = CustomPagination
     throttle_classes = [AnonRateThrottle]
 
     def get_cache_key(self):
         return 'book-list-view'
 
-    def get(self, request, *args, **kwargs):
-        cache_key = self.get_cache_key()
-        # result = cache.get(cache_key)
-        # if result:
-        #     return Response(result)
-        return self.list(request, *args, **kwargs)
-
     def get_queryset(self):
-        return Comment.objects.all().select_related('book', 'user').prefetch_related('user__groups',
-                                                                                     'user__user_permissions')
+        return Book.objects.all().prefetch_related('comments')
 
-    def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
 
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            # cache.set(self.get_cache_key(), serializer.data)
-            return self.get_paginated_response(serializer.data)
-
-        serializer = self.get_serializer(queryset, many=True)
-        # cache.set(self.get_cache_key(), serializer.data)
-        return Response(serializer.data)
+def check_scripts(text):
+    if '<script>' in text:
+        raise ValidationError('dangerous content')
+    return text
 
 
 class BookCreateForm(forms.ModelForm):
@@ -111,8 +98,7 @@ class BookCreateForm(forms.ModelForm):
 
     def clean_description(self):
         description = self.cleaned_data['description']
-        if '<script>' in description:
-            raise ValidationError
+        description = check_scripts(description)
 
 
 class BookCreateView(CreateView):
@@ -123,3 +109,11 @@ class BookCreateView(CreateView):
     def get(self, request):
         self.object = Book.objects.last()
         return self.render_to_response(self.get_context_data())
+
+
+class CommentView(ListCreateAPIView):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+    pagination_class = CustomPagination
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]

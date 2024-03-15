@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework_simplejwt',
 
     'books',
 ]
@@ -128,7 +129,7 @@ REST_FRAMEWORK = {
         'rest_framework.throttling.AnonRateThrottle'
     ],
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '5/min'
+        'anon': '100/min'
     }
 }
 
