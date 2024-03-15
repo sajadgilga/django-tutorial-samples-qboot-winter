@@ -1,11 +1,14 @@
 import json
 
+from django import forms
+from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 # Create your views here.
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
+from django.views.generic import CreateView
 from rest_framework.generics import ListAPIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
@@ -99,3 +102,24 @@ class BookListApiView(ListAPIView):
         serializer = self.get_serializer(queryset, many=True)
         # cache.set(self.get_cache_key(), serializer.data)
         return Response(serializer.data)
+
+
+class BookCreateForm(forms.ModelForm):
+    class Meta:
+        model = Book
+        fields = ['title', 'description', 'tags']
+
+    def clean_description(self):
+        description = self.cleaned_data['description']
+        if '<script>' in description:
+            raise ValidationError
+
+
+class BookCreateView(CreateView):
+    template_name = 'book-form.html'
+    form_class = BookCreateForm
+    success_url = '/books/form-xss/'
+
+    def get(self, request):
+        self.object = Book.objects.last()
+        return self.render_to_response(self.get_context_data())

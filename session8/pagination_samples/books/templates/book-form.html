@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Book Creation Form</title>
+</head>
+<body>
+
+<div>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">submit</button>
+    </form>
+</div>
+<div>
+    <h2>{{ book.title }}</h2>
+    <p>{{ book.description }}</p>
+</div>
+</body>
+</html>

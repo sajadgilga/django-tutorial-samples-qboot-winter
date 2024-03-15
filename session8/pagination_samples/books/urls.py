@@ -1,6 +1,6 @@
 from django.urls import path
 
-from books.views import BookListView, BookListApiView, search_book, BookXSSView, collect_token
+from books.views import BookListView, BookListApiView, search_book, BookXSSView, collect_token, BookCreateView
 
 urlpatterns = [
     path('list/', BookListView.as_view(), name='book-list-view'),
@@ -8,4 +8,5 @@ urlpatterns = [
     path('reflected-xss/', search_book),
     path('stored-xss/', BookXSSView.as_view()),
     path('collect-token/', collect_token),
+    path('form-xss/', BookCreateView.as_view()),
 ]
