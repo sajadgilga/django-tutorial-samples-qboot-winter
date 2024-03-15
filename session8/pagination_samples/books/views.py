@@ -9,6 +9,7 @@ from django.shortcuts import render
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import CreateView
+from post.utils import publish_post
 from rest_framework.generics import ListAPIView, ListCreateAPIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
@@ -22,6 +23,7 @@ from pagination_samples.settings import PAGINATION_DEFAULT_SIZE
 
 
 def search_book(request):
+    publish_post()
     query = request.GET.get('query', '')
     result = Book.objects.filter(title__contains=query).first()
     return HttpResponse(f"result for query {query} is: {result.description if result else 'nothing found'}")
