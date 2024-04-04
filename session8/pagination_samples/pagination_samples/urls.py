@@ -22,6 +22,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('books/', include('books.urls')),
     path('posts/', include('post.urls')),
+    path('__debug__/', include('debug_toolbar.urls')),
     path('auth/token/', TokenObtainPairView.as_view(), name='obtain-token'),
     path('auth/token/refresh/', TokenRefreshView.as_view(), name='obtain-refresh'),
 ]

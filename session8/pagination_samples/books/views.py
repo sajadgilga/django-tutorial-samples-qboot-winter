@@ -1,6 +1,7 @@
 import json
 
 from django import forms
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.http import HttpResponse, JsonResponse
@@ -18,7 +19,7 @@ from rest_framework.throttling import AnonRateThrottle
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from books.models import Book, Comment
-from books.serializers import BookSerializer, CommentSerializer
+from books.serializers import CommentSerializer
 from pagination_samples.settings import PAGINATION_DEFAULT_SIZE
 
 
@@ -75,16 +76,37 @@ class CustomPagination(PageNumberPagination):
 
 
 class BookListApiView(ListAPIView):
-    queryset = Book.objects.all()
-    serializer_class = BookSerializer
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
     pagination_class = CustomPagination
-    throttle_classes = [AnonRateThrottle]
+    # throttle_classes = [AnonRateThrottle]
 
     def get_cache_key(self):
-        return 'book-list-view'
+        return 'book-list-view-cache-key'
+
+    def get(self, request, *args, **kwargs):
+        cache_key = self.get_cache_key()
+        # result = cache.get(cache_key)
+        # if result:
+        #     return Response(result)
+        return self.list(request, *args, **kwargs)
 
     def get_queryset(self):
-        return Book.objects.all().prefetch_related('comments')
+        return Comment.objects.all().select_related('book', 'user').prefetch_related('user__groups',
+                                                                                     'user__user_permissions')
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            cache.set(self.get_cache_key(), serializer.data)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        cache.set(self.get_cache_key(), serializer.data, expires=5)
+        return Response(serializer.data)
 
 
 def check_scripts(text):

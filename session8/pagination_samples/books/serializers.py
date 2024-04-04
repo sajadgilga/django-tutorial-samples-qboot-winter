@@ -6,19 +6,20 @@ from books.models import Book, Comment
 
 def get_data_from_external_service(some_value):
     print('real get data called!')
-    result = requests.get('http://example.com')
-    return result['data']
+    # result = requests.get('http://example.com')
+    return 'data'
 
 
 class CommentSerializer(serializers.ModelSerializer):
     external_data = serializers.SerializerMethodField()
 
     def get_external_data(self, _):
-        return get_data_from_external_service()
+        return get_data_from_external_service('')
 
     class Meta:
         model = Comment
         fields = ['id', 'text', 'book', 'user', 'external_data']
+        depth = 1
 
 
 class BookSerializer(serializers.ModelSerializer):
